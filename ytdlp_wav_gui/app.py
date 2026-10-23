@@ -9,6 +9,8 @@ from tkinter import font as tkfont
 
 from .downloader import DownloadOptions, Downloader
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ICON_PATH = os.path.join(PROJECT_ROOT, "assets", "icon.ico")
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "Music", "backing tracks")
 AUDIO_FORMATS = ["wav", "mp3", "m4a", "flac", "best"]
 QUALITY_OPTIONS = [("Máxima", "0"), ("Alta", "2"), ("Media", "5"), ("Baja", "9")]
@@ -387,6 +389,8 @@ def main() -> None:
         except Exception:
             pass
     root = tk.Tk()
+    if sys.platform == "win32" and os.path.exists(ICON_PATH):
+        root.iconbitmap(default=ICON_PATH)
     App(root)
     root.mainloop()
 
