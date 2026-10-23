@@ -4,6 +4,8 @@ Aplicación de escritorio para descargar el audio de vídeos de YouTube (WAV,
 MP3, M4A o FLAC) pegando sus enlaces. Por debajo usa
 [yt-dlp](https://github.com/yt-dlp/yt-dlp) y [ffmpeg](https://ffmpeg.org/).
 
+![Captura de la interfaz](assets/screenshot.png)
+
 ## Instalación (Windows)
 
 Solo hay que hacerlo una vez. Todos los comandos se escriben en **PowerShell**
