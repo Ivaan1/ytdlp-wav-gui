@@ -1,10 +1,49 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 from dataclasses import dataclass
 from typing import Callable
 
 import yt_dlp
+
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+
+
+def installed_version() -> str:
+    return yt_dlp.version.__version__
+
+
+def update_ytdlp(log_callback: Callable[[str], None]) -> str | None:
+    """Upgrade yt-dlp with pip in this interpreter; returns the version now on disk, or None on failure.
+
+    The already-imported module keeps its old version until the app restarts.
+    """
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "pip", "install", "--upgrade", "--disable-pip-version-check", "yt-dlp"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+        creationflags=_NO_WINDOW,
+    )
+    for line in proc.stdout:
+        if line.strip():
+            log_callback(line)
+    if proc.wait() != 0:
+        return None
+
+    result = subprocess.run(
+        [sys.executable, "-c", "import yt_dlp.version as v; print(v.__version__)"],
+        capture_output=True,
+        text=True,
+        creationflags=_NO_WINDOW,
+    )
+    return result.stdout.strip() or None
 
 
 @dataclass

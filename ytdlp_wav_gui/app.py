@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tkinter import font as tkfont
 
-from .downloader import DownloadOptions, Downloader
+from .downloader import DownloadOptions, Downloader, installed_version, update_ytdlp
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ICON_PATH = os.path.join(PROJECT_ROOT, "assets", "icon.ico")
@@ -185,9 +186,19 @@ class App(ttk.Frame):
     def _build_widgets(self) -> None:
         header = ttk.Frame(self)
         header.pack(fill="x", pady=(0, 20))
-        ttk.Label(header, text="yt-dlp audio", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(header, text="Pega enlaces de YouTube y extrae el audio.", style="Muted.TLabel").pack(anchor="w")
+        title_col = ttk.Frame(header)
+        title_col.pack(side="left", fill="x", expand=True)
+        ttk.Label(title_col, text="yt-dlp audio", style="Title.TLabel").pack(anchor="w")
+        ttk.Label(title_col, text="Pega enlaces de YouTube y extrae el audio.", style="Muted.TLabel").pack(anchor="w")
 
+        update_col = ttk.Frame(header)
+        update_col.pack(side="right", anchor="n")
+        self.update_btn = ttk.Button(
+            update_col, text="↻  Actualizar", style="Ghost.TButton", command=self._start_update, cursor="hand2"
+        )
+        self.update_btn.pack(anchor="e")
+        self.version_var = tk.StringVar(value=f"yt-dlp {installed_version()}")
+        ttk.Label(update_col, textvariable=self.version_var, style="Muted.TLabel").pack(anchor="e", pady=(4, 0))
 
         self._section(self, "Enlaces · uno por línea").pack(anchor="w", pady=(0, 6))
         self.url_text = self._text_widget(self, height=5, font=(self.ui_font, 10))
@@ -354,6 +365,7 @@ class App(ttk.Frame):
 
         self._downloader = Downloader(self._log, self._on_progress)
         self.download_btn.configure(state="disabled")
+        self.update_btn.configure(state="disabled")
         self.cancel_btn.configure(state="normal")
         self._set_progress(0, "Iniciando…")
 
@@ -374,10 +386,49 @@ class App(ttk.Frame):
 
     def _on_finished(self) -> None:
         self.download_btn.configure(state="normal")
+        self.update_btn.configure(state="normal")
         self.cancel_btn.configure(state="disabled")
         self.status_var.set("Listo")
         self._log("Proceso terminado.")
 
+    def _start_update(self) -> None:
+        self.update_btn.configure(state="disabled")
+        self.download_btn.configure(state="disabled")
+        self.status_var.set("Actualizando yt-dlp…")
+        self._log("Buscando actualizaciones de yt-dlp...")
+
+        def _run() -> None:
+            new_version = None
+            try:
+                new_version = update_ytdlp(self._log)
+            except Exception as exc:
+                self._log(f"ERROR: {exc}")
+            finally:
+                self.master.after(0, lambda: self._on_update_finished(new_version))
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _on_update_finished(self, new_version: str | None) -> None:
+        self.update_btn.configure(state="normal")
+        self.download_btn.configure(state="normal")
+        self.status_var.set("Listo")
+
+        if new_version is None:
+            messagebox.showerror("Error al actualizar", "No se pudo actualizar yt-dlp. Revisa el registro.")
+            return
+        old_version = installed_version()
+        if new_version == old_version:
+            self._log(f"yt-dlp ya está al día ({new_version}).")
+            return
+
+        self.version_var.set(f"yt-dlp {new_version} · reinicia")
+        self._log(f"yt-dlp actualizado: {old_version} → {new_version}.")
+        if messagebox.askyesno(
+            "yt-dlp actualizado",
+            f"Actualizado de {old_version} a {new_version}.\n\n¿Reiniciar la app ahora para usar la nueva versión?",
+        ):
+            subprocess.Popen([sys.executable, os.path.join(PROJECT_ROOT, "main.py")], cwd=PROJECT_ROOT)
+            self.master.destroy()
 
 
 def main() -> None:
