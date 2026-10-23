@@ -137,3 +137,13 @@ ytdlp-wav-gui/
 - Los colores del tema están en `COLORS` al principio de `app.py`.
 - Los audios descargados (`*.wav`, `*.mp3`, etc.) están excluidos del control
   de versiones vía `.gitignore`.
+
+## Créditos
+
+Este proyecto es solo una interfaz gráfica; todo el trabajo de extracción y
+conversión lo hace [yt-dlp](https://github.com/yt-dlp/yt-dlp.git), junto con
+[ffmpeg](https://ffmpeg.org/) para la conversión de audio.
+
+## Licencia
+
+[MIT](LICENSE).
