@@ -127,7 +127,9 @@ ytdlp-wav-gui/
 ├── ytdlp_wav_gui/
 │   ├── app.py              # interfaz Tkinter (tema, widgets, eventos)
 │   └── downloader.py       # wrapper sobre la API de yt-dlp y su actualización
-├── assets/icon.ico         # icono de la ventana y del acceso directo
+├── assets/
+│   ├── icon.ico            # icono de la ventana y del acceso directo
+│   └── screenshot.png      # captura usada en este README
 ├── create_shortcut.ps1     # crea el acceso directo de Windows
 └── requirements.txt
 ```
